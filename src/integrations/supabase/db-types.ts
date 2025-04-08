@@ -23,6 +23,16 @@ export interface User {
   keywords?: string[];
 }
 
+export interface Invitation {
+  id: string;
+  email: string;
+  role: 'customer' | 'admin' | 'superadmin';
+  status: 'pending' | 'accepted' | 'expired';
+  invited_by?: string;
+  created_at?: string;
+  expires_at?: string;
+}
+
 export interface PRSession {
   id: string;
   session_id: string;
