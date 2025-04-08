@@ -1,23 +1,18 @@
 
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth-context";
 
 export function Navbar() {
-  const navigate = useNavigate();
-
-  const handleSignOut = () => {
-    // In the future, this would handle sign-out logic
-    navigate("/signin");
-  };
+  const { user, signOut } = useAuth();
 
   return (
     <div className="h-16 border-b flex items-center px-6 justify-between">
       <h1 className="text-xl font-semibold">Magic On Tap Admin</h1>
       <div className="flex items-center gap-4">
         <div className="text-sm text-muted-foreground">
-          admin@magicrontap.com
+          {user?.email || 'Not signed in'}
         </div>
-        <Button variant="outline" size="sm" onClick={handleSignOut}>
+        <Button variant="outline" size="sm" onClick={signOut}>
           Sign out
         </Button>
       </div>

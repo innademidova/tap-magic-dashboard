@@ -6,36 +6,34 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
 
 function SignIn() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, isLoading, user } = useAuth();
+
+  // Redirect if already signed in
+  if (user) {
+    navigate('/');
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     
     try {
-      // In the future, this would connect to Supabase
-      // For now, we'll just simulate a login with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Basic validation for the demo
+      // Basic validation
       if (!email || !password) {
         toast.error("Please fill in all fields");
         return;
       }
       
-      // Success
-      toast.success("Signed in successfully");
-      navigate("/");
+      await signIn(email, password);
     } catch (error) {
-      toast.error("Failed to sign in");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+      console.error("Sign in error:", error);
+      // Error is handled in the auth context
     }
   };
 

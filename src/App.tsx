@@ -9,34 +9,55 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import SignIn from "./pages/SignIn";
 import NotFound from "./pages/NotFound";
+import { AuthProvider, useAuth } from "./lib/auth-context";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  // This would be replaced with actual auth check when Supabase is integrated
-  const isAuthenticated = () => {
-    // For demo purposes, always consider authenticated except on sign-in page
-    const path = window.location.pathname;
-    return path !== "/signin";
-  };
+// Protected route wrapper
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+  
+  if (!user) {
+    return <Navigate to="/signin" replace />;
+  }
+  
+  return <>{children}</>;
+};
 
+const AppRoutes = () => {
+  return (
+    <Routes>
+      <Route path="/signin" element={<SignIn />} />
+      
+      {/* Protected routes */}
+      <Route element={
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      }>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/admin" element={<Admin />} />
+      </Route>
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/signin" element={<SignIn />} />
-            
-            {/* Protected routes */}
-            <Route element={<Layout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/admin" element={<Admin />} />
-            </Route>
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
