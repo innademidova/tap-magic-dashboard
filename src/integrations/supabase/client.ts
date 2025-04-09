@@ -10,6 +10,6 @@ const supabaseAnonKeyDev = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXB
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
-export const supabase = createClient<Database>(supabaseUrlDev, supabaseAnonKeyDev);
+//export const supabase = createClient<Database>(supabaseUrlDev, supabaseAnonKeyDev);
 
-//export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
