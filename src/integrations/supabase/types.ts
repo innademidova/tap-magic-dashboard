@@ -626,7 +626,7 @@ export type Database = {
         Returns: string
       }
       is_admin_or_superadmin: {
-        Args: { user_id: string }
+        Args: Record<PropertyKey, never> | { user_id: string }
         Returns: boolean
       }
       is_superadmin: {

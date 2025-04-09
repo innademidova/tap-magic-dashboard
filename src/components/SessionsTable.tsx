@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Eye, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -70,8 +69,10 @@ export function SessionsTable() {
                   <TableCell>{formatDate(session.datetime || session.created_at)}</TableCell>
                   <TableCell>{session.subject_matter || "N/A"}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" title="View Session">
-                      <Eye className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" title="View Session" asChild>
+                      <Link to={`/pr-session/${session.id}`}>
+                        <Eye className="h-4 w-4" />
+                      </Link>
                     </Button>
                     <Button variant="ghost" size="icon" title="Edit Session">
                       <Edit className="h-4 w-4" />
