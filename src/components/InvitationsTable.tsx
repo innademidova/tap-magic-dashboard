@@ -70,7 +70,7 @@ export function InvitationsTable() {
         toast.error("Failed to fetch invitations");
         throw error;
       }
-
+console.log("data", data)
       return data as unknown as Invitation[];
     },
   });

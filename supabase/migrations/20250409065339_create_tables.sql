@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS public.ghl_contacts (
     );
 
 -- Create invitations table to track sent invitations
-CREATE TABLE public.invitations (
+CREATE TABLE IF NOT EXISTS public.invitations (
                                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                     email TEXT NOT NULL,
                                     role TEXT NOT NULL DEFAULT 'customer',
@@ -117,46 +117,7 @@ CREATE TABLE public.invitations (
 );
 
 -- Create index on email for faster lookups
-CREATE INDEX idx_invitations_email ON public.invitations(email);
-
--- Add RLS policies to protect the invitations table
-ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
-
--- Only admin users can see invitations
-CREATE POLICY "Admins can see all invitations" 
-ON public.invitations 
-FOR SELECT
-               USING (
-               EXISTS (
-               SELECT 1 FROM public.users
-               WHERE users.id = auth.uid()
-               AND users.role IN ('admin', 'superadmin')
-               )
-               );
-
--- Only admin users can create invitations
-CREATE POLICY "Admins can create invitations" 
-ON public.invitations 
-FOR INSERT 
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM public.users 
-    WHERE users.id = auth.uid() 
-    AND users.role IN ('admin', 'superadmin')
-  )
-);
-
--- Only admin users can update invitations
-CREATE POLICY "Admins can update invitations" 
-ON public.invitations 
-FOR UPDATE
-                      USING (
-                      EXISTS (
-                      SELECT 1 FROM public.users
-                      WHERE users.id = auth.uid()
-                      AND users.role IN ('admin', 'superadmin')
-                      )
-                      );
+CREATE INDEX IF NOT EXISTS idx_invitations_email ON public.invitations(email);
 
 -- Create blog_content_view
 CREATE OR REPLACE VIEW blog_content_view AS
