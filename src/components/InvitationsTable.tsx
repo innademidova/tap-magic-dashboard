@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -62,8 +61,8 @@ export function InvitationsTable() {
     queryKey: ["invitations"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("invitations")
-        .select("*")
+        .from('invitations')
+        .select('*')
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -71,20 +70,20 @@ export function InvitationsTable() {
         throw error;
       }
 
-      return data as Invitation[];
+      return data as unknown as Invitation[];
     },
   });
 
   const createInvitationMutation = useMutation({
     mutationFn: async (values: InvitationFormValues) => {
       const { data, error } = await supabase
-        .from("invitations")
+        .from('invitations')
         .insert([values])
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return data as unknown as Invitation;
     },
     onSuccess: () => {
       toast.success("Invitation sent successfully!");
@@ -110,7 +109,6 @@ export function InvitationsTable() {
   }
 
   const resendInvitation = async (invitation: Invitation) => {
-    // This would typically trigger an email sending process
     toast.success(`Invitation resent to ${invitation.email}!`);
   };
 
