@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Settings, Users, Calendar, Menu, X } from 'lucide-react';
+import { Home, Settings, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Sidebar() {
@@ -29,7 +28,7 @@ export function Sidebar() {
           onClick={toggleCollapse} 
           className="ml-auto p-2 rounded-md hover:bg-sidebar-accent"
         >
-          {collapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
+          <Menu className="h-5 w-5" />
         </button>
       </div>
       
