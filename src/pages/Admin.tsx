@@ -1,5 +1,5 @@
-
-import { useState } from "react";
+import { useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UsersTable } from "@/components/UsersTable";
@@ -7,7 +7,20 @@ import { SessionsTable } from "@/components/SessionsTable";
 import { InvitationsTable } from "@/components/InvitationsTable";
 
 function Admin() {
-  const [activeTab, setActiveTab] = useState("users");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const activeTab = searchParams.get('tab') || 'users';
+
+  useEffect(() => {
+    // If no tab parameter is present, set the default tab
+    if (!searchParams.has('tab')) {
+      setSearchParams({ tab: 'users' });
+    }
+  }, [searchParams, setSearchParams]);
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
   
   return (
     <div className="space-y-6">
@@ -18,7 +31,7 @@ function Admin() {
         </p>
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full md:w-[600px] grid-cols-3">
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="invitations">Invitations</TabsTrigger>

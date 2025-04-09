@@ -1,9 +1,9 @@
-
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PRSession } from "@/integrations/supabase/db-types";
+import { useAuth } from "@/lib/auth-context";
 import {
   Table,
   TableBody,
@@ -13,10 +13,45 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Eye, Edit } from "lucide-react";
+import { RefreshCw, Eye, Edit, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function SessionsTable({ limit }: { limit?: number }) {
+  const { user: currentAuthUser } = useAuth();
+  const [sessionToDelete, setSessionToDelete] = useState<PRSession | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser", currentAuthUser?.id],
+    queryFn: async () => {
+      if (!currentAuthUser?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('auth_id', currentAuthUser.id)
+        .single();
+
+      if (error) {
+        console.error("Failed to fetch current user:", error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: !!currentAuthUser?.id,
+  });
+
   const { data: sessions, isLoading } = useQuery({
     queryKey: ["pr_sessions", limit],
     queryFn: async () => {
@@ -37,6 +72,25 @@ export function SessionsTable({ limit }: { limit?: number }) {
       }
 
       return data as unknown as (PRSession & { users: { first_name: string, last_name: string } })[];
+    },
+  });
+
+  const deleteSessionMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
+      const { error } = await supabase
+        .from('pr_sessions')
+        .delete()
+        .eq('id', sessionId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Session deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["pr_sessions"] });
+      setSessionToDelete(null);
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete session: ${error.message}`);
     },
   });
 
@@ -83,6 +137,17 @@ export function SessionsTable({ limit }: { limit?: number }) {
                     <Button variant="ghost" size="icon" title="Edit Session">
                       <Edit className="h-4 w-4" />
                     </Button>
+                    {currentUser?.role === 'admin' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Delete Session"
+                        onClick={() => setSessionToDelete(session)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -96,6 +161,27 @@ export function SessionsTable({ limit }: { limit?: number }) {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={!!sessionToDelete} onOpenChange={() => setSessionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the PR session
+              and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => sessionToDelete && deleteSessionMutation.mutate(sessionToDelete.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
