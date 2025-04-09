@@ -7,9 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { Edit } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: userProfile, isLoading } = useQuery({
     queryKey: ["user", user?.id],
@@ -40,7 +42,10 @@ export default function Profile() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">My Profile</h2>
-        <Button className="flex items-center gap-2">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => navigate("/edit-profile")}
+        >
           <Edit className="h-4 w-4" />
           Edit Profile
         </Button>

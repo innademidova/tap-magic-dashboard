@@ -11,6 +11,7 @@ import SignIn from "./pages/SignIn";
 import NotFound from "./pages/NotFound";
 import PRSessionDetails from "./pages/PRSessionDetails";
 import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
 import { AuthProvider, useAuth } from "./lib/auth-context";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Dashboard />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/pr-session/:sessionId" element={<PRSessionDetails />} />
       </Route>
       
