@@ -16,14 +16,20 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Eye, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export function SessionsTable() {
+export function SessionsTable({ limit }: { limit?: number }) {
   const { data: sessions, isLoading } = useQuery({
-    queryKey: ["pr_sessions"],
+    queryKey: ["pr_sessions", limit],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('pr_sessions')
         .select('*, users:user_id(first_name, last_name)')
         .order('created_at', { ascending: false });
+        
+      if (limit) {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         toast.error("Failed to fetch PR sessions");

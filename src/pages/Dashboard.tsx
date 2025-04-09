@@ -2,26 +2,66 @@
 import { useQuery } from "@tanstack/react-query";
 import { Stats } from "@/components/Stats";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { statistics, users, prSessions } from "@/lib/data";
+import { supabase } from "@/integrations/supabase/client";
+import { SessionsTable } from "@/components/SessionsTable";
+import { format, subHours } from "date-fns";
+import { toast } from "sonner";
 
 function Dashboard() {
-  // In a real app, these would be actual API calls
-  const { data: statsData } = useQuery({
-    queryKey: ["statistics"],
-    queryFn: () => Promise.resolve(statistics),
-    initialData: statistics,
-  });
+  const { data: statsData, isLoading } = useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: async () => {
+      try {
+        // Get total users count
+        const { count: totalUsers, error: usersError } = await supabase
+          .from('users')
+          .select('*', { count: 'exact', head: true });
+        
+        if (usersError) throw usersError;
 
-  const { data: recentUsers } = useQuery({
-    queryKey: ["recentUsers"],
-    queryFn: () => Promise.resolve(users.slice(0, 5)),
-    initialData: users.slice(0, 5),
-  });
+        // Get users created in the last 24 hours
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+        
+        const { data: recentUsers, error: recentUsersError } = await supabase
+          .from('users')
+          .select('*')
+          .gte('created_at', twentyFourHoursAgo.toISOString());
+        
+        if (recentUsersError) throw recentUsersError;
 
-  const { data: upcomingSessions } = useQuery({
-    queryKey: ["upcomingSessions"],
-    queryFn: () => Promise.resolve(prSessions.filter(s => s.status === "scheduled")),
-    initialData: prSessions.filter(s => s.status === "scheduled"),
+        // Get total sessions count
+        const { count: totalSessions, error: sessionsError } = await supabase
+          .from('pr_sessions')
+          .select('*', { count: 'exact', head: true });
+        
+        if (sessionsError) throw sessionsError;
+
+        // Get sessions created in the last 24 hours
+        const { data: recentSessions, error: recentSessionsError } = await supabase
+          .from('pr_sessions')
+          .select('*')
+          .gte('created_at', twentyFourHoursAgo.toISOString());
+        
+        if (recentSessionsError) throw recentSessionsError;
+
+        return {
+          totalUsers: totalUsers || 0,
+          recentUsers: recentUsers?.length || 0,
+          totalSessions: totalSessions || 0,
+          recentSessions: recentSessions?.length || 0
+        };
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        toast.error("Failed to load dashboard statistics");
+        return {
+          totalUsers: 0,
+          recentUsers: 0,
+          totalSessions: 0,
+          recentSessions: 0
+        };
+      }
+    },
   });
 
   return (
@@ -33,14 +73,30 @@ function Dashboard() {
         </p>
       </div>
       
-      <Stats
-        totalUsers={statsData.totalUsers}
-        activeUsers={statsData.activeUsers}
-        totalSessions={statsData.totalSessions}
-        completedSessions={statsData.completedSessions}
-        userGrowthRate={statsData.userGrowthRate}
-        sessionCompletionRate={statsData.sessionCompletionRate}
-      />
+      {isLoading ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="animate-pulse">
+            <CardHeader className="h-20 bg-muted/20"></CardHeader>
+            <CardContent className="h-28 bg-muted/10"></CardContent>
+          </Card>
+          <Card className="animate-pulse">
+            <CardHeader className="h-20 bg-muted/20"></CardHeader>
+            <CardContent className="h-28 bg-muted/10"></CardContent>
+          </Card>
+        </div>
+      ) : (
+        <Stats
+          totalUsers={statsData?.totalUsers || 0}
+          recentUsers={statsData?.recentUsers || 0}
+          totalSessions={statsData?.totalSessions || 0}
+          recentSessions={statsData?.recentSessions || 0}
+        />
+      )}
+      
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Recent PR Sessions</h3>
+        <SessionsTable limit={5} />
+      </div>
     </div>
   );
 }
