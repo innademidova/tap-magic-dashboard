@@ -42,6 +42,11 @@ CREATE POLICY "Admins can delete sessions" ON public.pr_sessions
   );
 
 -- PR Articles policies
+CREATE POLICY "Admins can see all articles" ON public.pr_articles
+  FOR SELECT USING (
+    is_admin_or_superadmin()
+  );             
+             
 CREATE POLICY "Admins can insert articles" ON public.pr_articles
   FOR INSERT WITH CHECK (
     is_admin_or_superadmin()
