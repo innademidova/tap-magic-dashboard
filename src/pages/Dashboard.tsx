@@ -41,54 +41,6 @@ function Dashboard() {
         userGrowthRate={statsData.userGrowthRate}
         sessionCompletionRate={statsData.sessionCompletionRate}
       />
-      
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Users</CardTitle>
-            <CardDescription>Latest users who joined the system</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{user.name}</p>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {new Date(user.lastLogin).toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming PR Sessions</CardTitle>
-            <CardDescription>Sessions scheduled for the future</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {upcomingSessions.map((session) => (
-                <div key={session.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{session.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {session.participants} participants · {session.duration}
-                    </p>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {new Date(session.date).toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
