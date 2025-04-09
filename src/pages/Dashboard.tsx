@@ -1,10 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Stats } from "@/components/Stats";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { SessionsTable } from "@/components/SessionsTable";
-import { format, subHours } from "date-fns";
 import { toast } from "sonner";
 
 function Dashboard() {
@@ -92,11 +90,6 @@ function Dashboard() {
           recentSessions={statsData?.recentSessions || 0}
         />
       )}
-      
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold mb-4">Recent PR Sessions</h3>
-        <SessionsTable limit={5} />
-      </div>
     </div>
   );
 }
