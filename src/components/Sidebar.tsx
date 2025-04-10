@@ -1,18 +1,49 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Settings, Menu } from 'lucide-react';
+import { Home, Settings, Menu, Workflow } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth-context';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const { user } = useAuth();
+  
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('auth_id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!user?.id,
+  });
   
   const toggleCollapse = () => {
     setCollapsed(!collapsed);
   };
   
+  const isAdmin = userProfile?.role === "admin" || userProfile?.role === "superadmin";
+  
   const menuItems = [
     { name: 'Dashboard', path: '/', icon: <Home className="h-5 w-5" /> },
-    { name: 'Admin', path: '/admin', icon: <Settings className="h-5 w-5" /> }
+    { 
+      name: isAdmin ? 'Admin' : 'Agents', 
+      path: '/admin', 
+      icon: isAdmin ? <Settings className="h-5 w-5" /> : <Workflow className="h-5 w-5" />
+    }
   ];
 
   return (
