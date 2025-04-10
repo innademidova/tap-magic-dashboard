@@ -9,7 +9,7 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Key } from "lucide-react";
 import {
@@ -35,20 +35,11 @@ const formSchema = z.object({
   keywords: z.string().optional(),
 });
 
-const passwordFormSchema = z.object({
-  newPassword: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
 function EditProfile() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const { data: userProfile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ["user-profile", user?.id],
@@ -89,14 +80,6 @@ function EditProfile() {
     },
   });
 
-  const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
-    resolver: zodResolver(passwordFormSchema),
-    defaultValues: {
-      newPassword: "",
-      confirmPassword: "",
-    },
-  });
-
   // Update form when profile data is loaded
   useEffect(() => {
     if (userProfile) {
@@ -115,25 +98,6 @@ function EditProfile() {
       });
     }
   }, [userProfile, user, form]);
-
-  const updatePasswordMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof passwordFormSchema>) => {
-      const { error } = await supabase.auth.updateUser({
-        password: values.newPassword
-      });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Password updated successfully");
-      passwordForm.reset();
-      setIsPasswordModalOpen(false);
-    },
-    onError: (error) => {
-      toast.error("Failed to update password");
-      console.error(error);
-    },
-  });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user?.id) return;
