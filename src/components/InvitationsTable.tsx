@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, RefreshCw, Mail } from "lucide-react";
+import { PlusCircle, RefreshCw, Mail, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,7 @@ import {
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const invitationSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -56,6 +57,7 @@ type InvitationFormValues = z.infer<typeof invitationSchema>;
 
 export function InvitationsTable() {
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: invitations, isLoading: isLoadingInvitations } = useQuery({
@@ -70,34 +72,72 @@ export function InvitationsTable() {
         toast.error("Failed to fetch invitations");
         throw error;
       }
-console.log("data", data)
+
       return data as unknown as Invitation[];
     },
   });
 
   const createInvitationMutation = useMutation({
     mutationFn: async (values: InvitationFormValues) => {
-      const { data, error } = await supabase
-        .from('invitations')
-        .insert([{
+      setError(null);
+      
+      // Call the edge function to send the invitation
+      const { data, error } = await supabase.functions.invoke('send-invitation', {
+        body: {
           email: values.email,
           role: values.role,
-          status: 'pending'
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data as unknown as Invitation;
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Invitation sent successfully!");
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
       setOpen(false);
       form.reset();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      // Check for specific error messages
+      if (error.message.includes("already exists")) {
+        setError("An invitation for this email already exists and is pending");
+      } else {
+        setError(`Failed to send invitation: ${error.message}`);
+      }
       toast.error(`Failed to send invitation: ${error.message}`);
+    },
+  });
+
+  const resendInvitationMutation = useMutation({
+    mutationFn: async (invitation: Invitation) => {
+      const { data, error } = await supabase.functions.invoke('send-invitation', {
+        body: {
+          email: invitation.email,
+          role: invitation.role,
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      
+      return data;
+    },
+    onSuccess: (data, invitation) => {
+      toast.success(`Invitation resent to ${invitation.email}!`);
+      queryClient.invalidateQueries({ queryKey: ["invitations"] });
+    },
+    onError: (error, invitation) => {
+      toast.error(`Failed to resend invitation to ${invitation.email}: ${error.message}`);
     },
   });
 
@@ -113,8 +153,8 @@ console.log("data", data)
     createInvitationMutation.mutate(values);
   }
 
-  const resendInvitation = async (invitation: Invitation) => {
-    toast.success(`Invitation resent to ${invitation.email}!`);
+  const resendInvitation = (invitation: Invitation) => {
+    resendInvitationMutation.mutate(invitation);
   };
 
   const getStatusBadge = (status: string) => {
@@ -148,6 +188,13 @@ console.log("data", data)
                 Invite a new user to join the platform. They will receive an email with a link to register.
               </DialogDescription>
             </DialogHeader>
+
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -259,8 +306,11 @@ console.log("data", data)
                       variant="outline"
                       size="sm"
                       onClick={() => resendInvitation(invitation)}
-                      disabled={invitation.status !== "pending"}
+                      disabled={invitation.status !== "pending" || resendInvitationMutation.isPending}
                     >
+                      {resendInvitationMutation.isPending ? 
+                        <RefreshCw className="h-3 w-3 animate-spin mr-1" /> : 
+                        null}
                       Resend
                     </Button>
                   </TableCell>
