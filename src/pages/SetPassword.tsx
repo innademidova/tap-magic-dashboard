@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth-context";
 import { PasswordChangeForm } from "@/components/PasswordChangeForm";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 function SetPassword() {
   const navigate = useNavigate();
@@ -28,6 +29,15 @@ function SetPassword() {
             showCancelButton={false}
           />
         </CardContent>
+        <CardFooter className="flex justify-center">
+          <Button 
+            variant="link" 
+            onClick={() => navigate('/')}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Skip for now
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );
