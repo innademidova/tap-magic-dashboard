@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +12,7 @@ import PRSessionDetails from "./pages/PRSessionDetails";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import SetPassword from "./pages/SetPassword";
+import CustomerAgents from "./pages/CustomerAgents";
 import { AuthProvider, useAuth } from "./lib/auth-context";
 
 const queryClient = new QueryClient();
@@ -45,6 +45,7 @@ const AppRoutes = () => {
       }>
         <Route path="/" element={<Dashboard />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/agents" element={<CustomerAgents />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/set-password" element={<SetPassword />} />
