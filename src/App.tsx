@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import PRSessionDetails from "./pages/PRSessionDetails";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import SetPassword from "./pages/SetPassword";
 import { AuthProvider, useAuth } from "./lib/auth-context";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const AppRoutes = () => {
         <Route path="/admin" element={<Admin />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path="/set-password" element={<SetPassword />} />
         <Route path="/pr-session/:sessionId" element={<PRSessionDetails />} />
       </Route>
       

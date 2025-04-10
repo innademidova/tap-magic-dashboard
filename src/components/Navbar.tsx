@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/lib/auth-context";
 import { 
   DropdownMenu,
@@ -6,7 +7,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, Key } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -50,6 +51,12 @@ export function Navbar() {
               <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
                 <User className="h-4 w-4" />
                 Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/set-password" className="flex items-center gap-2 cursor-pointer">
+                <Key className="h-4 w-4" />
+                Set Password
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={signOut} className="flex items-center gap-2 cursor-pointer">
