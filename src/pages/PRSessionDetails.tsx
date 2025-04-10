@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { PRSession, PRArticle, User } from "@/integrations/supabase/db-types";
+import { PRSession, PRArticle, User, PRTalkingPoint } from "@/integrations/supabase/db-types";
 import {
   Card,
   CardContent,
@@ -20,8 +20,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, FileText } from "lucide-react";
+import { ArrowLeft, RefreshCw, FileText, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { TalkingPointsDialog } from "@/components/TalkingPointsDialog";
 
 interface SessionWithUser extends PRSession {
   users: User;
@@ -30,6 +31,8 @@ interface SessionWithUser extends PRSession {
 function PRSessionDetails() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
+  const [isTalkingPointsOpen, setIsTalkingPointsOpen] = useState(false);
 
   // Fetch session details
   const {
@@ -78,6 +81,11 @@ function PRSessionDetails() {
     },
     enabled: !!sessionId,
   });
+
+  const handleOpenTalkingPoints = (articleId: string) => {
+    setSelectedArticleId(articleId);
+    setIsTalkingPointsOpen(true);
+  };
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
@@ -204,6 +212,7 @@ function PRSessionDetails() {
                   <TableHead>URL</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created At</TableHead>
+                  <TableHead>Talking Points</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -223,6 +232,17 @@ function PRSessionDetails() {
                     </TableCell>
                     <TableCell>{article.status}</TableCell>
                     <TableCell>{formatDate(article.created_at)}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenTalkingPoints(article.id)}
+                        className="flex items-center gap-1"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        See talking points
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -234,6 +254,16 @@ function PRSessionDetails() {
           )}
         </CardContent>
       </Card>
+
+      {/* Talking Points Dialog */}
+      <TalkingPointsDialog
+        open={isTalkingPointsOpen}
+        articleId={selectedArticleId}
+        onClose={() => {
+          setIsTalkingPointsOpen(false);
+          setSelectedArticleId(null);
+        }}
+      />
     </div>
   );
 }
