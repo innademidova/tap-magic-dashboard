@@ -85,8 +85,7 @@ export function InvitationsTable() {
       const { data, error } = await supabase.functions.invoke('send-invitation', {
         body: {
           email: values.email,
-          role: values.role,
-          redirectTo: window.location.origin
+          redirectTo: 'https://tap-magic-dashboard.lovable.app/signin'
         }
       });
       
@@ -122,7 +121,6 @@ export function InvitationsTable() {
       const { data, error } = await supabase.functions.invoke('send-invitation', {
         body: {
           email: invitation.email,
-          role: invitation.role,
           redirectTo: window.location.origin
         }
       });
