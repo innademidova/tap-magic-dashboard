@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -10,9 +9,17 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Key } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { PasswordChangeForm } from "@/components/PasswordChangeForm";
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -28,10 +35,20 @@ const formSchema = z.object({
   keywords: z.string().optional(),
 });
 
+const passwordFormSchema = z.object({
+  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 function EditProfile() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { data: userProfile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ["user-profile", user?.id],
@@ -72,8 +89,16 @@ function EditProfile() {
     },
   });
 
+  const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
+    resolver: zodResolver(passwordFormSchema),
+    defaultValues: {
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
   // Update form when profile data is loaded
-  React.useEffect(() => {
+  useEffect(() => {
     if (userProfile) {
       form.reset({
         firstName: userProfile.first_name || "",
@@ -90,6 +115,25 @@ function EditProfile() {
       });
     }
   }, [userProfile, user, form]);
+
+  const updatePasswordMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof passwordFormSchema>) => {
+      const { error } = await supabase.auth.updateUser({
+        password: values.newPassword
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Password updated successfully");
+      passwordForm.reset();
+      setIsPasswordModalOpen(false);
+    },
+    onError: (error) => {
+      toast.error("Failed to update password");
+      console.error(error);
+    },
+  });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user?.id) return;
@@ -139,7 +183,7 @@ function EditProfile() {
     <div className="container max-w-2xl mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Edit Profile</h1>
-        <Button onClick={() => navigate('/set-password')} variant="outline" className="flex items-center gap-2">
+        <Button onClick={() => setIsPasswordModalOpen(true)} variant="outline" className="flex items-center gap-2">
           <Key className="h-4 w-4" />
           Change Password
         </Button>
@@ -309,6 +353,22 @@ function EditProfile() {
           </Button>
         </form>
       </Form>
+
+      <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Enter your new password below.
+            </DialogDescription>
+          </DialogHeader>
+
+          <PasswordChangeForm
+            onSuccess={() => setIsPasswordModalOpen(false)}
+            onCancel={() => setIsPasswordModalOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
