@@ -61,12 +61,7 @@ function SignIn() {
               />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Button variant="link" className="p-0 h-auto text-xs">
-                  Forgot password?
-                </Button>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -91,9 +86,12 @@ function SignIn() {
               </div>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-2">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign in"}
+            </Button>
+            <Button type="button" variant="link" className="p-0 h-auto text-xs">
+              Forgot password?
             </Button>
           </CardFooter>
         </form>
