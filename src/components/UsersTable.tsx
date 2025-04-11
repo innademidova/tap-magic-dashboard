@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Edit } from "lucide-react";
+import { RefreshCw, Edit, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Form,
   FormControl,
@@ -56,6 +67,8 @@ export function UsersTable() {
   const { user: currentAuthUser } = useAuth();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
@@ -125,6 +138,28 @@ export function UsersTable() {
     },
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      // Delete the user from the database
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+      return userId;
+    },
+    onSuccess: () => {
+      toast.success("User deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete user: ${error.message}`);
+    },
+  });
+
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
     defaultValues: {
@@ -144,6 +179,17 @@ export function UsersTable() {
       role: user.role,
     });
     setIsEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (user: User) => {
+    setUserToDelete(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (userToDelete) {
+      deleteUserMutation.mutate(userToDelete.id);
+    }
   };
 
   function onSubmit(values: UserFormValues) {
@@ -186,7 +232,7 @@ export function UsersTable() {
                   </TableCell>
                   <TableCell>{formatDate(user.created_at)}</TableCell>
                   <TableCell>{user.phone || "-"}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex items-center justify-end gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -194,6 +240,15 @@ export function UsersTable() {
                       title="Edit User"
                     >
                       <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteClick(user)}
+                      title="Delete User"
+                      className="hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -308,6 +363,40 @@ export function UsersTable() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user 
+              {userToDelete && (
+                <span className="font-semibold"> {userToDelete.first_name} {userToDelete.last_name}</span>
+              )} and remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending ? (
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </div>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
