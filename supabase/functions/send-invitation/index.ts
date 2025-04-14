@@ -58,7 +58,7 @@ serve(async (req) => {
       });
     }
 
-    // Send invitation email
+    // Send invitation email using Supabase Auth API
     const response = await fetch(`${supabaseUrl}/auth/v1/invite`, {
       method: "POST",
       headers: {
@@ -68,14 +68,16 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         email,
-        redirect_to: redirectTo || "https://tap-magic-dashboard.lovable.app/signin",
+        data: { role }, // Include role in user metadata
+        redirect_to: redirectTo || `${new URL(req.url).origin}/signin`,
       }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      return new Response(JSON.stringify({ error: data?.message || "Invite failed" }), {
+      console.error("Invitation failed:", data);
+      return new Response(JSON.stringify({ error: data?.msg || "Invite failed" }), {
         status: response.status,
         headers: {
           "Content-Type": "application/json",
@@ -109,11 +111,9 @@ serve(async (req) => {
 
     if (insertError) {
       console.error("Failed to insert invitation record:", insertError);
-      // Continue even if the invitation record insertion fails
-      // The user was still invited via email
     }
 
-    return new Response(JSON.stringify({ status: "invited", user: data }), {
+    return new Response(JSON.stringify({ status: "invited", data }), {
       headers: {
         "Content-Type": "application/json",
         ...corsHeaders,
