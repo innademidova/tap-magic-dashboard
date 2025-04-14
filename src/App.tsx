@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +13,7 @@ import PRSessionDetails from "./pages/PRSessionDetails";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import ForgotPassword from "./pages/ForgotPassword";
 import CustomerAgents from "./pages/CustomerAgents";
 import { AuthProvider, useAuth } from "./lib/auth-context";
 
