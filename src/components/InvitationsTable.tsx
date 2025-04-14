@@ -48,7 +48,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const invitationSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
-  role: z.enum(["customer", "admin", "superadmin"], {
+  role: z.enum(["customer", "admin"], {
     required_error: "Please select a role",
   }),
 });
@@ -233,7 +233,6 @@ export function InvitationsTable() {
                         <SelectContent>
                           <SelectItem value="customer">Customer</SelectItem>
                           <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="superadmin">Super Admin</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormDescription>

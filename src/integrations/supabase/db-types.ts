@@ -11,7 +11,7 @@ export interface User {
   first_name: string;
   last_name: string;
   phone?: string;
-  role: 'customer' | 'admin' | 'superadmin'; // Assuming these are the valid roles from the enum
+  role: 'customer' | 'admin' | 'superadmin';
   created_at?: string;
   updated_at?: string;
   bio?: string;
