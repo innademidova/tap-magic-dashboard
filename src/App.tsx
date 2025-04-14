@@ -11,7 +11,7 @@ import NotFound from "./pages/NotFound";
 import PRSessionDetails from "./pages/PRSessionDetails";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
-import SetPassword from "./pages/SetPassword";
+import ResetPassword from "./pages/ResetPassword.tsx";
 import CustomerAgents from "./pages/CustomerAgents";
 import { AuthProvider, useAuth } from "./lib/auth-context";
 
@@ -48,7 +48,7 @@ const AppRoutes = () => {
         <Route path="/agents" element={<CustomerAgents />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/edit-profile" element={<EditProfile />} />
-        <Route path="/set-password" element={<SetPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/pr-session/:sessionId" element={<PRSessionDetails />} />
       </Route>
       

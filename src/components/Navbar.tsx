@@ -42,22 +42,8 @@ export function Navbar() {
   return (
     <div className="h-16 border-b flex items-center px-6 justify-between">
       <div className="flex items-center gap-4">
-        <h1 className="text-xl font-semibold">Magic On Tap {isAdmin ? 'Admin' : 'Agents'}</h1>
-        <Link 
-          to={isAdmin ? "/admin" : "/agents"} 
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {isAdmin ? (
-            <>
-              <Settings className="h-4 w-4" />
-              <span>Admin</span>
-            </>
-          ) : (
-            <>
-              <Workflow className="h-4 w-4" />
-              <span>Agents</span>
-            </>
-          )}
+        <Link to="/" className="text-xl font-semibold hover:text-primary transition-colors">
+          Magic On Tap Admin
         </Link>
       </div>
       <div className="flex items-center gap-4">
