@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -17,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Eye, Edit, Trash2, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +32,8 @@ export function SessionsTable({ limit }: { limit?: number }) {
   const { user: currentAuthUser } = useAuth();
   const [sessionToDelete, setSessionToDelete] = useState<PRSession | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
@@ -97,30 +99,67 @@ export function SessionsTable({ limit }: { limit?: number }) {
     },
   });
 
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (sessionIds: string[]) => {
+      const { error } = await supabase
+        .from('pr_sessions')
+        .delete()
+        .in('id', sessionIds);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Selected sessions deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["pr_sessions"] });
+      setSelectedSessions([]);
+      setShowBulkDeleteDialog(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete sessions: ${error.message}`);
+    },
+  });
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && sessions) {
+      setSelectedSessions(sessions.map(session => session.id));
+    } else {
+      setSelectedSessions([]);
+    }
+  };
+
+  const handleSelectSession = (sessionId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedSessions(prev => [...prev, sessionId]);
+    } else {
+      setSelectedSessions(prev => prev.filter(id => id !== sessionId));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedSessions.length > 0) {
+      bulkDeleteMutation.mutate(selectedSessions);
+    }
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleString();
   };
 
-  // Filter sessions based on search query
   const filteredSessions = sessions?.filter((session) => {
     if (!searchQuery.trim()) return true;
     
     const query = searchQuery.toLowerCase();
     
-    // Search in session ID
     if (session.session_id.toLowerCase().includes(query)) return true;
     
-    // Search in user name
     if (session.users && 
         `${session.users.first_name} ${session.users.last_name}`.toLowerCase().includes(query)) 
         return true;
     
-    // Search in date
     const date = formatDate(session.datetime || session.created_at).toLowerCase();
     if (date.includes(query)) return true;
     
-    // Search in subject matter
     if (session.subject_matter && session.subject_matter.toLowerCase().includes(query)) 
         return true;
     
@@ -129,20 +168,37 @@ export function SessionsTable({ limit }: { limit?: number }) {
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search sessions..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search sessions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        {selectedSessions.length > 0 && (
+          <Button
+            variant="destructive"
+            onClick={() => setShowBulkDeleteDialog(true)}
+            className="whitespace-nowrap"
+          >
+            Delete Selected ({selectedSessions.length})
+          </Button>
+        )}
       </div>
       
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={sessions?.length > 0 && selectedSessions.length === sessions.length}
+                  onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                />
+              </TableHead>
               <TableHead>Session ID</TableHead>
               <TableHead>User</TableHead>
               <TableHead>Date</TableHead>
@@ -153,13 +209,19 @@ export function SessionsTable({ limit }: { limit?: number }) {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
                 </TableCell>
               </TableRow>
             ) : filteredSessions && filteredSessions.length > 0 ? (
               filteredSessions.map((session) => (
                 <TableRow key={session.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedSessions.includes(session.id)}
+                      onCheckedChange={(checked) => handleSelectSession(session.id, checked as boolean)}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{session.session_id}</TableCell>
                   <TableCell>
                     {session.users ? `${session.users.first_name} ${session.users.last_name}` : "Unknown User"}
@@ -191,7 +253,7 @@ export function SessionsTable({ limit }: { limit?: number }) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? "No matching sessions found." : "No PR sessions found."}
                 </TableCell>
               </TableRow>
@@ -216,6 +278,27 @@ export function SessionsTable({ limit }: { limit?: number }) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Selected Sessions?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete {selectedSessions.length} selected PR {selectedSessions.length === 1 ? 'session' : 'sessions'}
+              and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Selected
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
