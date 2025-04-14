@@ -36,6 +36,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/signin" element={<SignIn />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       
       {/* Protected routes */}
       <Route element={

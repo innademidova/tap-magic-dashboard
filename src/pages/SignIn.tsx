@@ -90,7 +90,12 @@ function SignIn() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
-            <Button type="button" variant="link" className="p-0 h-auto text-xs">
+            <Button 
+              type="button" 
+              variant="link" 
+              className="p-0 h-auto text-xs"
+              onClick={() => navigate("/forgot-password")}
+            >
               Forgot password?
             </Button>
           </CardFooter>
