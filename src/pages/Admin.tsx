@@ -21,22 +21,26 @@ function Admin() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const activeTab = searchParams.get('tab') || 'users';
-  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
-
-  useEffect(() => {
-    // If no tab parameter is present, set the default tab
-    if (!searchParams.has('tab')) {
-      setSearchParams({ tab: 'users' });
-    }
-  }, [searchParams, setSearchParams]);
+  const selectedAgentId = searchParams.get('agent');
 
   const handleTabChange = (value: string) => {
-    setSearchParams({ tab: value });
-    setSelectedAgent(null);
+    setSearchParams({ 
+      tab: value, 
+      ...(selectedAgentId ? { agent: selectedAgentId } : {}) 
+    });
   };
 
   const handleAgentSelect = (agentId: string) => {
-    setSelectedAgent(agentId);
+    setSearchParams({ 
+      tab: 'agents', 
+      agent: agentId 
+    });
+  };
+
+  const handleAgentDeselect = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('agent');
+    setSearchParams(newParams);
   };
   
   return (
@@ -80,19 +84,19 @@ function Admin() {
         </TabsContent>
         
         <TabsContent value="agents" className="mt-6">
-          {selectedAgent ? (
+          {selectedAgentId ? (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setSelectedAgent(null)}
+                  onClick={handleAgentDeselect}
                   className="h-8 w-8"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <h3 className="text-lg font-semibold">
-                  {AGENTS.find(agent => agent.id === selectedAgent)?.name}
+                  {AGENTS.find(agent => agent.id === selectedAgentId)?.name}
                 </h3>
               </div>
               <Card>
@@ -128,3 +132,4 @@ function Admin() {
 }
 
 export default Admin;
+
