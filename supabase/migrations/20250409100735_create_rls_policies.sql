@@ -65,6 +65,11 @@ CREATE POLICY "Admins can delete articles" ON public.pr_articles
   );
 
 -- PR Talking Points policies
+CREATE POLICY "Admins can read all talking points" ON public.pr_talking_points
+  FOR SELECT USING (
+                                     is_admin_or_superadmin()
+                                     );             
+             
 CREATE POLICY "Admins can insert talking points" ON public.pr_talking_points
   FOR INSERT WITH CHECK (
     is_admin_or_superadmin()
