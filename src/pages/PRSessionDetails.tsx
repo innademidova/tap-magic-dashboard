@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PRSession, PRArticle, User, PRTalkingPoint } from "@/integrations/supabase/db-types";
 import {
@@ -19,9 +19,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, FileText, MessageSquare } from "lucide-react";
+import { ArrowLeft, RefreshCw, FileText, Info } from "lucide-react";
 import { toast } from "sonner";
-import { TalkingPointsDialog } from "@/components/TalkingPointsDialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SessionWithUser extends PRSession {
   users: User;
@@ -31,7 +37,7 @@ function PRSessionDetails() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
-  const [isTalkingPointsOpen, setIsTalkingPointsOpen] = useState(false);
+  const [localArticles, setLocalArticles] = useState<PRArticle[]>([]);
 
   const {
     data: session,
@@ -79,9 +85,43 @@ function PRSessionDetails() {
     enabled: !!sessionId,
   });
 
-  const handleOpenTalkingPoints = (articleId: string) => {
-    setSelectedArticleId(articleId);
-    setIsTalkingPointsOpen(true);
+  // Update local articles when the query data changes
+  useEffect(() => {
+    if (articles) {
+      setLocalArticles(articles);
+    }
+  }, [articles]);
+
+  const updateArticleStatusMutation = useMutation({
+    mutationFn: async ({ articleId, status }: { articleId: string; status: string }) => {
+      const { error } = await supabase
+        .from('pr_articles')
+        .update({ status })
+        .eq('id', articleId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, { articleId, status }) => {
+      // Update the local state instead of refetching
+      setLocalArticles(prevArticles => 
+        prevArticles.map(article => 
+          article.id === articleId 
+            ? { ...article, status } 
+            : article
+        )
+      );
+      toast.success("Article status updated successfully");
+    },
+    onError: (error) => {
+      toast.error(`Failed to update article status: ${error.message}`);
+    },
+  });
+
+  const handleApproveChange = (articleId: string, checked: boolean) => {
+    updateArticleStatusMutation.mutate({
+      articleId,
+      status: checked ? 'approved' : 'draft'
+    });
   };
 
   const formatDate = (dateString?: string) => {
@@ -113,10 +153,12 @@ function PRSessionDetails() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">PR Session Details</h2>
-        <Button variant="outline" onClick={() => navigate("/admin")}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Admin
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/admin?tab=agents&agent=pr-researcher")}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-3xl font-bold tracking-tight">PR Session Details</h2>
+        </div>
       </div>
 
       <Card>
@@ -197,7 +239,7 @@ function PRSessionDetails() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {articles && articles.length > 0 ? (
+          {localArticles && localArticles.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -206,11 +248,25 @@ function PRSessionDetails() {
                   <TableHead>URL</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created At</TableHead>
-                  <TableHead>Talking Points</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-2">
+                      Approve
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Approval of the article will trigger the next step: generation of talking points.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {articles.map((article) => (
+                {localArticles.map((article) => (
                   <TableRow key={article.id} className="cursor-pointer hover:bg-muted/50">
                     <TableCell 
                       className="font-medium"
@@ -232,15 +288,11 @@ function PRSessionDetails() {
                     <TableCell>{article.status}</TableCell>
                     <TableCell>{formatDate(article.created_at)}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenTalkingPoints(article.id)}
-                        className="flex items-center gap-1"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                        See talking points
-                      </Button>
+                      <Checkbox
+                        checked={article.status === 'approved'}
+                        onCheckedChange={(checked) => handleApproveChange(article.id, checked as boolean)}
+                        disabled={updateArticleStatusMutation.isPending}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -253,15 +305,6 @@ function PRSessionDetails() {
           )}
         </CardContent>
       </Card>
-
-      <TalkingPointsDialog
-        open={isTalkingPointsOpen}
-        articleId={selectedArticleId}
-        onClose={() => {
-          setIsTalkingPointsOpen(false);
-          setSelectedArticleId(null);
-        }}
-      />
     </div>
   );
 }
