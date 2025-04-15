@@ -15,6 +15,7 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import ForgotPassword from "./pages/ForgotPassword";
 import CustomerAgents from "./pages/CustomerAgents";
 import { AuthProvider, useAuth } from "./lib/auth-context";
+import ArticleDetails from "@/pages/ArticleDetails.tsx";
 
 const queryClient = new QueryClient();
 

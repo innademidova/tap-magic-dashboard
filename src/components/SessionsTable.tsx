@@ -265,9 +265,6 @@ export function SessionsTable({ limit }: { limit?: number }) {
                         <Eye className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button variant="ghost" size="icon" title="Edit Session">
-                      <Edit className="h-4 w-4" />
-                    </Button>
                     {currentUser?.role === 'admin' && (
                       <Button
                         variant="ghost"
