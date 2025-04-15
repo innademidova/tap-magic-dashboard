@@ -35,6 +35,7 @@ export function TalkingPointsDialog({
   onClose,
 }: TalkingPointsDialogProps) {
   const [approvedTalkingPoints, setApprovedTalkingPoints] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fetch talking points related to this article
   const {
@@ -72,10 +73,45 @@ export function TalkingPointsDialog({
     });
   };
 
-  // This function would save approved status to the database once the is_approved column is implemented
-  const handleSaveApprovals = () => {
-    toast.info("Approvals functionality will be implemented in the future");
-    onClose();
+  const handleSaveApprovals = async () => {
+    if (!articleId) return;
+
+    setIsSaving(true);
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      // Get approved talking points details
+      const approvedPoints = talkingPoints?.filter(tp => 
+        approvedTalkingPoints.includes(tp.id)
+      ) || [];
+
+      // Call the webhook
+      const response = await fetch('https://devcom.app.n8n.cloud/webhook-test/23607c30-eebb-4f88-b9ae-333f065394bd', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          article_id: articleId,
+          user_id: user.id,
+          approved_talking_points: approvedPoints,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to trigger webhook');
+      }
+
+      toast.success("Talking points approvals saved successfully");
+      onClose();
+    } catch (error) {
+      console.error('Error saving approvals:', error);
+      toast.error("Failed to save talking points approvals");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const formatDate = (dateString?: string) => {
@@ -127,7 +163,19 @@ export function TalkingPointsDialog({
               </TableBody>
             </Table>
             <div className="flex justify-end mt-4">
-              <Button onClick={handleSaveApprovals}>Save Approvals</Button>
+              <Button 
+                onClick={handleSaveApprovals} 
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Approvals'
+                )}
+              </Button>
             </div>
           </>
         ) : (
