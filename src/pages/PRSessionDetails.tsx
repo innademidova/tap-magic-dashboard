@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -100,9 +101,29 @@ function PRSessionDetails() {
         .eq('id', articleId);
 
       if (error) throw error;
+
+      // Only trigger webhook when status is changed to 'approved'
+      if (status === 'approved') {
+        try {
+          const webhookResponse = await fetch('https://devcom.app.n8n.cloud/webhook/8a6de0c8-3694-48be-a506-1ddee6b9b4d0', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ article_id: articleId }),
+          });
+          
+          if (!webhookResponse.ok) {
+            throw new Error('Webhook trigger failed');
+          }
+        } catch (webhookError) {
+          console.error('Webhook error:', webhookError);
+          toast.error('Failed to trigger the next workflow');
+          return;
+        }
+      }
     },
     onSuccess: (_, { articleId, status }) => {
-      // Update the local state instead of refetching
       setLocalArticles(prevArticles => 
         prevArticles.map(article => 
           article.id === articleId 
