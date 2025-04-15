@@ -9,73 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      chat_rooms: {
-        Row: {
-          created_at: string
-          id: number
-          is_public: boolean
-          location_id: number
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          is_public?: boolean
-          location_id: number
-          name: string
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          is_public?: boolean
-          location_id?: number
-          name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_rooms_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      gamers: {
-        Row: {
-          age: number | null
-          created_at: string
-          gamer_tag: string | null
-          id: number
-          name: string
-          parent_id: string
-        }
-        Insert: {
-          age?: number | null
-          created_at?: string
-          gamer_tag?: string | null
-          id?: number
-          name: string
-          parent_id: string
-        }
-        Update: {
-          age?: number | null
-          created_at?: string
-          gamer_tag?: string | null
-          id?: number
-          name?: string
-          parent_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gamers_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       ghl_contacts: {
         Row: {
           address1: string | null
@@ -200,68 +133,6 @@ export type Database = {
             columns: ["invited_by"]
             isOneToOne: false
             referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      locations: {
-        Row: {
-          address: string | null
-          created_at: string
-          description: string | null
-          id: number
-          name: string
-        }
-        Insert: {
-          address?: string | null
-          created_at?: string
-          description?: string | null
-          id?: number
-          name: string
-        }
-        Update: {
-          address?: string | null
-          created_at?: string
-          description?: string | null
-          id?: number
-          name?: string
-        }
-        Relationships: []
-      }
-      messages: {
-        Row: {
-          chat_room_id: number | null
-          content: string
-          created_at: string
-          dm_recipient_id: string | null
-          id: number
-          is_at_all: boolean
-          user_id: string
-        }
-        Insert: {
-          chat_room_id?: number | null
-          content: string
-          created_at?: string
-          dm_recipient_id?: string | null
-          id?: number
-          is_at_all?: boolean
-          user_id: string
-        }
-        Update: {
-          chat_room_id?: number | null
-          content?: string
-          created_at?: string
-          dm_recipient_id?: string | null
-          id?: number
-          is_at_all?: boolean
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_chat_room_id_fkey"
-            columns: ["chat_room_id"]
-            isOneToOne: false
-            referencedRelation: "chat_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -460,76 +331,6 @@ export type Database = {
           },
         ]
       }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          full_name: string | null
-          id: string
-          is_admin: boolean
-          location_id: number | null
-          username: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          full_name?: string | null
-          id: string
-          is_admin?: boolean
-          location_id?: number | null
-          username: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          full_name?: string | null
-          id?: string
-          is_admin?: boolean
-          location_id?: number | null
-          username?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      read_receipts: {
-        Row: {
-          chat_room_id: number | null
-          dm_partner_id: string | null
-          id: number
-          last_read_at: string
-          user_id: string
-        }
-        Insert: {
-          chat_room_id?: number | null
-          dm_partner_id?: string | null
-          id?: number
-          last_read_at: string
-          user_id: string
-        }
-        Update: {
-          chat_room_id?: number | null
-          dm_partner_id?: string | null
-          id?: number
-          last_read_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "read_receipts_chat_room_id_fkey"
-            columns: ["chat_room_id"]
-            isOneToOne: false
-            referencedRelation: "chat_rooms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       users: {
         Row: {
           audience: string | null
@@ -630,7 +431,7 @@ export type Database = {
         Returns: boolean
       }
       is_superadmin: {
-        Args: { user_id: string }
+        Args: Record<PropertyKey, never> | { user_id: string }
         Returns: boolean
       }
     }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -34,7 +33,6 @@ function PRSessionDetails() {
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [isTalkingPointsOpen, setIsTalkingPointsOpen] = useState(false);
 
-  // Fetch session details
   const {
     data: session,
     isLoading: isLoadingSession,
@@ -58,7 +56,6 @@ function PRSessionDetails() {
     enabled: !!sessionId,
   });
 
-  // Fetch articles related to this session
   const {
     data: articles,
     isLoading: isLoadingArticles,
@@ -122,7 +119,6 @@ function PRSessionDetails() {
         </Button>
       </div>
 
-      {/* Session Information */}
       <Card>
         <CardHeader>
           <CardTitle>Session Information</CardTitle>
@@ -146,7 +142,6 @@ function PRSessionDetails() {
         </CardContent>
       </Card>
 
-      {/* User Information */}
       <Card>
         <CardHeader>
           <CardTitle>User Information</CardTitle>
@@ -194,7 +189,6 @@ function PRSessionDetails() {
         </CardContent>
       </Card>
 
-      {/* Related Articles */}
       <Card>
         <CardHeader>
           <CardTitle>Related Articles</CardTitle>
@@ -217,8 +211,13 @@ function PRSessionDetails() {
               </TableHeader>
               <TableBody>
                 {articles.map((article) => (
-                  <TableRow key={article.id}>
-                    <TableCell className="font-medium">{article.title}</TableCell>
+                  <TableRow key={article.id} className="cursor-pointer hover:bg-muted/50">
+                    <TableCell 
+                      className="font-medium"
+                      onClick={() => navigate(`/article/${article.id}`)}
+                    >
+                      {article.title}
+                    </TableCell>
                     <TableCell>{article.author}</TableCell>
                     <TableCell>
                       <Button
@@ -255,7 +254,6 @@ function PRSessionDetails() {
         </CardContent>
       </Card>
 
-      {/* Talking Points Dialog */}
       <TalkingPointsDialog
         open={isTalkingPointsOpen}
         articleId={selectedArticleId}
