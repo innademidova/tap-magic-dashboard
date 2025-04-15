@@ -12,6 +12,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Eye, Edit, Trash2, Search } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -28,6 +36,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+const ITEMS_PER_PAGE = 25;
+
 export function SessionsTable({ limit }: { limit?: number }) {
   const { user: currentAuthUser } = useAuth();
   const [sessionToDelete, setSessionToDelete] = useState<PRSession | null>(null);
@@ -35,6 +45,8 @@ export function SessionsTable({ limit }: { limit?: number }) {
   const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser", currentAuthUser?.id],
@@ -58,8 +70,18 @@ export function SessionsTable({ limit }: { limit?: number }) {
   });
 
   const { data: sessions, isLoading } = useQuery({
-    queryKey: ["pr_sessions", limit],
+    queryKey: ["pr_sessions", limit, currentPage],
     queryFn: async () => {
+      // First, get the total count
+      const { count } = await supabase
+        .from('pr_sessions')
+        .select('*', { count: 'exact', head: true });
+
+      if (count !== null) {
+        setTotalPages(Math.ceil(count / (limit || ITEMS_PER_PAGE)));
+      }
+
+      // Then get the paginated data
       let query = supabase
         .from('pr_sessions')
         .select('*, users:user_id(first_name, last_name)')
@@ -67,6 +89,11 @@ export function SessionsTable({ limit }: { limit?: number }) {
         
       if (limit) {
         query = query.limit(limit);
+      } else {
+        const from = (currentPage - 1) * ITEMS_PER_PAGE;
+        query = query
+          .range(from, from + ITEMS_PER_PAGE - 1)
+          .limit(ITEMS_PER_PAGE);
       }
 
       const { data, error } = await query;
@@ -166,6 +193,10 @@ export function SessionsTable({ limit }: { limit?: number }) {
     return false;
   });
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
@@ -261,6 +292,37 @@ export function SessionsTable({ limit }: { limit?: number }) {
           </TableBody>
         </Table>
       </div>
+
+      {!limit && totalPages > 1 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            
+            {[...Array(totalPages)].map((_, index) => (
+              <PaginationItem key={index + 1}>
+                <PaginationLink
+                  onClick={() => handlePageChange(index + 1)}
+                  isActive={currentPage === index + 1}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       <AlertDialog open={!!sessionToDelete} onOpenChange={() => setSessionToDelete(null)}>
         <AlertDialogContent>
