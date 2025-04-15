@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Stats } from "@/components/Stats";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -17,16 +18,33 @@ const Dashboard = () => {
 
         if (usersError) throw usersError;
 
-        // Get users created in the last 24 hours
+        // Get users who signed in during the last 24 hours
         const twentyFourHoursAgo = new Date();
         twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-        const { data: recentUsers, error: recentUsersError } = await supabase
-            .from('users')
-            .select('*')
-            .gte('created_at', twentyFourHoursAgo.toISOString());
+        // Query the auth.users table for recent sign-ins
+        const { data: authData, error: authError } = await supabase.auth.admin.listUsers({
+          filters: {
+            gt: {
+              last_sign_in_at: twentyFourHoursAgo.toISOString(),
+            },
+          },
+        });
 
-        if (recentUsersError) throw recentUsersError;
+        if (authError) {
+          console.error("Error fetching auth users:", authError);
+          // Fallback to using the users table created_at as before
+          const { data: recentUsers, error: recentUsersError } = await supabase
+              .from('users')
+              .select('*')
+              .gte('created_at', twentyFourHoursAgo.toISOString());
+
+          if (recentUsersError) throw recentUsersError;
+          
+          var recentUsersCount = recentUsers?.length || 0;
+        } else {
+          var recentUsersCount = authData?.users?.length || 0;
+        }
 
         // Get total sessions count
         const { count: totalSessions, error: sessionsError } = await supabase
@@ -45,7 +63,7 @@ const Dashboard = () => {
 
         return {
           totalUsers: totalUsers || 0,
-          recentUsers: recentUsers?.length || 0,
+          recentUsers: recentUsersCount,
           totalSessions: totalSessions || 0,
           recentSessions: recentSessions?.length || 0
         };
