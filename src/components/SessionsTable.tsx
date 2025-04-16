@@ -21,7 +21,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Eye, Edit, Trash2, Search } from "lucide-react";
+import { RefreshCw, Eye, Trash2, Search, PlusCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -44,6 +44,7 @@ export function SessionsTable({ limit }: { limit?: number }) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -72,7 +73,6 @@ export function SessionsTable({ limit }: { limit?: number }) {
   const { data: sessions, isLoading } = useQuery({
     queryKey: ["pr_sessions", limit, currentPage],
     queryFn: async () => {
-      // First, get the total count
       const { count } = await supabase
         .from('pr_sessions')
         .select('*', { count: 'exact', head: true });
@@ -81,7 +81,6 @@ export function SessionsTable({ limit }: { limit?: number }) {
         setTotalPages(Math.ceil(count / (limit || ITEMS_PER_PAGE)));
       }
 
-      // Then get the paginated data
       let query = supabase
         .from('pr_sessions')
         .select('*, users:user_id(first_name, last_name)')
@@ -197,6 +196,41 @@ export function SessionsTable({ limit }: { limit?: number }) {
     setCurrentPage(page);
   };
 
+  const handleCreateSession = async () => {
+    if (!currentUser) {
+      toast.error("User not found");
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const response = await fetch(
+        "https://devcom.app.n8n.cloud/webhook/9667dbae-dc18-412c-a0c6-4d4071df7949",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: currentUser.id,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to create session");
+      }
+
+      toast.success("Session creation initiated");
+      queryClient.invalidateQueries({ queryKey: ["pr_sessions"] });
+    } catch (error) {
+      console.error("Error creating session:", error);
+      toast.error("Failed to create session");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
@@ -209,15 +243,34 @@ export function SessionsTable({ limit }: { limit?: number }) {
             className="pl-10"
           />
         </div>
-        {selectedSessions.length > 0 && (
+        <div className="flex items-center gap-2">
           <Button
-            variant="destructive"
-            onClick={() => setShowBulkDeleteDialog(true)}
+            onClick={handleCreateSession}
+            disabled={isCreating}
             className="whitespace-nowrap"
           >
-            Delete Selected ({selectedSessions.length})
+            {isCreating ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create New Session
+              </>
+            )}
           </Button>
-        )}
+          {selectedSessions.length > 0 && (
+            <Button
+              variant="destructive"
+              onClick={() => setShowBulkDeleteDialog(true)}
+              className="whitespace-nowrap"
+            >
+              Delete Selected ({selectedSessions.length})
+            </Button>
+          )}
+        </div>
       </div>
       
       <div className="rounded-md border">
