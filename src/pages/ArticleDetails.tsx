@@ -14,6 +14,7 @@ import {
 import { ArrowLeft, RefreshCw, FileText, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { TalkingPointsDialog } from "@/components/TalkingPointsDialog";
+import { BlogSection } from "@/components/BlogSection";
 import { useState } from "react";
 
 function ArticleDetails() {
@@ -117,6 +118,8 @@ function ArticleDetails() {
           </div>
         </CardContent>
       </Card>
+
+      <BlogSection articleId={articleId || ""} />
 
       {articleId && (
         <TalkingPointsDialog
