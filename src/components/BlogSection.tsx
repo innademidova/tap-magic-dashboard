@@ -60,7 +60,7 @@ export function BlogSection({ articleId }: BlogSectionProps) {
       if (!user) throw new Error("No user found");
 
       const response = await fetch(
-        "https://devcom.app.n8n.cloud/webhook-test/23607c30-eebb-4f88-b9ae-333f065394bd",
+        "https://devcom.app.n8n.cloud/webhook/23607c30-eebb-4f88-b9ae-333f065394bd",
         {
           method: "POST",
           headers: {

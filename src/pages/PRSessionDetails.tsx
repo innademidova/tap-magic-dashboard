@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { PRSession, PRArticle, User, PRTalkingPoint } from "@/integrations/supabase/db-types";
+import { PRSession, PRArticle, User } from "@/integrations/supabase/db-types";
 import {
   Card,
   CardContent,
@@ -110,7 +110,8 @@ function PRSessionDetails() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ article_id: articleId }),
+            body: JSON.stringify({ article_id: articleId,
+            session_id: sessionId }),
           });
           
           if (!webhookResponse.ok) {
