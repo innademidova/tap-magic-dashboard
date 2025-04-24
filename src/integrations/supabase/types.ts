@@ -9,140 +9,13 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      ghl_contacts: {
-        Row: {
-          address1: string | null
-          assigned_to: string | null
-          city: string | null
-          company_name: string | null
-          contact_name: string | null
-          country: string | null
-          date_added: string | null
-          date_of_birth: string | null
-          date_updated: string | null
-          dnd: boolean | null
-          email: string | null
-          event_date_time: string | null
-          event_location: string | null
-          first_name: string | null
-          id: string
-          last_activity: number | null
-          last_name: string | null
-          location_id: string
-          number_of_gamers: number | null
-          phone: string | null
-          postal_code: string | null
-          source: string | null
-          state: string | null
-          tags: Json | null
-          timezone: string | null
-          type: string | null
-          website: string | null
-        }
-        Insert: {
-          address1?: string | null
-          assigned_to?: string | null
-          city?: string | null
-          company_name?: string | null
-          contact_name?: string | null
-          country?: string | null
-          date_added?: string | null
-          date_of_birth?: string | null
-          date_updated?: string | null
-          dnd?: boolean | null
-          email?: string | null
-          event_date_time?: string | null
-          event_location?: string | null
-          first_name?: string | null
-          id: string
-          last_activity?: number | null
-          last_name?: string | null
-          location_id: string
-          number_of_gamers?: number | null
-          phone?: string | null
-          postal_code?: string | null
-          source?: string | null
-          state?: string | null
-          tags?: Json | null
-          timezone?: string | null
-          type?: string | null
-          website?: string | null
-        }
-        Update: {
-          address1?: string | null
-          assigned_to?: string | null
-          city?: string | null
-          company_name?: string | null
-          contact_name?: string | null
-          country?: string | null
-          date_added?: string | null
-          date_of_birth?: string | null
-          date_updated?: string | null
-          dnd?: boolean | null
-          email?: string | null
-          event_date_time?: string | null
-          event_location?: string | null
-          first_name?: string | null
-          id?: string
-          last_activity?: number | null
-          last_name?: string | null
-          location_id?: string
-          number_of_gamers?: number | null
-          phone?: string | null
-          postal_code?: string | null
-          source?: string | null
-          state?: string | null
-          tags?: Json | null
-          timezone?: string | null
-          type?: string | null
-          website?: string | null
-        }
-        Relationships: []
-      }
-      invitations: {
-        Row: {
-          created_at: string | null
-          email: string
-          expires_at: string | null
-          id: string
-          invited_by: string | null
-          role: string
-          status: string
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          expires_at?: string | null
-          id?: string
-          invited_by?: string | null
-          role?: string
-          status?: string
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          expires_at?: string | null
-          id?: string
-          invited_by?: string | null
-          role?: string
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invitations_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       pr_articles: {
         Row: {
-          author: string
+          article_number: number | null
           confidence_score: number | null
           content: string
           created_at: string | null
+          description: string | null
           id: string
           session_id: string
           status: string
@@ -151,10 +24,11 @@ export type Database = {
           url: string
         }
         Insert: {
-          author: string
+          article_number?: number | null
           confidence_score?: number | null
           content: string
           created_at?: string | null
+          description?: string | null
           id?: string
           session_id: string
           status?: string
@@ -163,10 +37,11 @@ export type Database = {
           url: string
         }
         Update: {
-          author?: string
+          article_number?: number | null
           confidence_score?: number | null
           content?: string
           created_at?: string | null
+          description?: string | null
           id?: string
           session_id?: string
           status?: string
@@ -176,18 +51,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pr_articles_session_id_fkey"
+            foreignKeyName: "fk_session"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "pr_sessions"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pr_articles_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "session_articles_blogs_view"
-            referencedColumns: ["session_id"]
           },
         ]
       }
@@ -218,33 +86,24 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pr_blogs_article_id_fkey"
+            foreignKeyName: "fk_article"
             columns: ["article_id"]
             isOneToOne: true
             referencedRelation: "pr_articles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pr_blogs_article_id_fkey"
-            columns: ["article_id"]
-            isOneToOne: true
-            referencedRelation: "session_articles_blogs_view"
-            referencedColumns: ["article_id"]
           },
         ]
       }
       pr_sessions: {
         Row: {
           audience: string | null
-          bio: string | null
           created_at: string | null
           datetime: string | null
+          gmail_threadid: string | null
           id: string
-          industry: string | null
-          keywords: string[] | null
           session_id: string
+          step: number
           subject_matter: string | null
-          summary_content: string | null
           updated_at: string | null
           user_id: string
           usp: string | null
@@ -252,15 +111,13 @@ export type Database = {
         }
         Insert: {
           audience?: string | null
-          bio?: string | null
           created_at?: string | null
           datetime?: string | null
+          gmail_threadid?: string | null
           id?: string
-          industry?: string | null
-          keywords?: string[] | null
           session_id: string
+          step?: number
           subject_matter?: string | null
-          summary_content?: string | null
           updated_at?: string | null
           user_id: string
           usp?: string | null
@@ -268,15 +125,13 @@ export type Database = {
         }
         Update: {
           audience?: string | null
-          bio?: string | null
           created_at?: string | null
           datetime?: string | null
+          gmail_threadid?: string | null
           id?: string
-          industry?: string | null
-          keywords?: string[] | null
           session_id?: string
+          step?: number
           subject_matter?: string | null
-          summary_content?: string | null
           updated_at?: string | null
           user_id?: string
           usp?: string | null
@@ -298,6 +153,7 @@ export type Database = {
           content: string
           created_at: string | null
           id: string
+          talking_point_type_id: number
           updated_at: string | null
         }
         Insert: {
@@ -305,6 +161,7 @@ export type Database = {
           content: string
           created_at?: string | null
           id?: string
+          talking_point_type_id: number
           updated_at?: string | null
         }
         Update: {
@@ -312,30 +169,46 @@ export type Database = {
           content?: string
           created_at?: string | null
           id?: string
+          talking_point_type_id?: number
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "pr_talking_points_article_id_fkey"
+            foreignKeyName: "fk_article"
             columns: ["article_id"]
             isOneToOne: false
             referencedRelation: "pr_articles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pr_talking_points_article_id_fkey"
-            columns: ["article_id"]
+            foreignKeyName: "fk_talking_point_type"
+            columns: ["talking_point_type_id"]
             isOneToOne: false
-            referencedRelation: "session_articles_blogs_view"
-            referencedColumns: ["article_id"]
+            referencedRelation: "talking_point_types"
+            referencedColumns: ["id"]
           },
         ]
+      }
+      talking_point_types: {
+        Row: {
+          id: number
+          label: string
+        }
+        Insert: {
+          id?: number
+          label: string
+        }
+        Update: {
+          id?: number
+          label?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {
           audience: string | null
-          auth_id: string | null
           bio: string | null
+          core_beliefs: string | null
           created_at: string | null
           email: string
           first_name: string
@@ -344,7 +217,6 @@ export type Database = {
           keywords: string[] | null
           last_name: string
           phone: string | null
-          role: Database["public"]["Enums"]["user_role"]
           subject_matter: string | null
           updated_at: string | null
           usp: string | null
@@ -352,8 +224,8 @@ export type Database = {
         }
         Insert: {
           audience?: string | null
-          auth_id?: string | null
           bio?: string | null
+          core_beliefs?: string | null
           created_at?: string | null
           email: string
           first_name: string
@@ -362,7 +234,6 @@ export type Database = {
           keywords?: string[] | null
           last_name: string
           phone?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
           subject_matter?: string | null
           updated_at?: string | null
           usp?: string | null
@@ -370,8 +241,8 @@ export type Database = {
         }
         Update: {
           audience?: string | null
-          auth_id?: string | null
           bio?: string | null
+          core_beliefs?: string | null
           created_at?: string | null
           email?: string
           first_name?: string
@@ -380,7 +251,6 @@ export type Database = {
           keywords?: string[] | null
           last_name?: string
           phone?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
           subject_matter?: string | null
           updated_at?: string | null
           usp?: string | null
@@ -390,53 +260,36 @@ export type Database = {
       }
     }
     Views: {
-      blog_content_view: {
-        Row: {
-          blog_content: string | null
-          session_id: string | null
-        }
-        Relationships: []
-      }
-      session_articles_blogs_view: {
+      talking_points_with_titles: {
         Row: {
           article_id: string | null
-          article_title: string | null
-          blog_body: string | null
-          blog_id: string | null
-          blog_title: string | null
-          session_id: string | null
-          session_identifier: string | null
-          talking_point_content: string | null
-          talking_point_id: string | null
-          user_id: string | null
+          content: string | null
+          label: string | null
+          talking_point_type_id: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "pr_sessions_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "fk_article"
+            columns: ["article_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "pr_articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_talking_point_type"
+            columns: ["talking_point_type_id"]
+            isOneToOne: false
+            referencedRelation: "talking_point_types"
             referencedColumns: ["id"]
           },
         ]
       }
     }
     Functions: {
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: string
-      }
-      is_admin_or_superadmin: {
-        Args: Record<PropertyKey, never> | { user_id: string }
-        Returns: boolean
-      }
-      is_superadmin: {
-        Args: Record<PropertyKey, never> | { user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      user_role: "customer" | "admin" | "superadmin"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -551,8 +404,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      user_role: ["customer", "admin", "superadmin"],
-    },
+    Enums: {},
   },
 } as const
